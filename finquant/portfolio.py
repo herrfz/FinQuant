@@ -838,20 +838,20 @@ def _get_stocks_data_columns(data, names, cols):
     reqcolnames = []
     # if dataframe is of type multiindex, also get first level colname
     firstlevel_colnames = []
-    for i in range(len(names)):
+    for i, name in enumerate(names):
         for col in cols:
             # differ between dataframe directly from quandl and
             # possibly previously processed dataframe, e.g.
             # read in from disk with slightly modified column labels
             # 1. if <stock_name> in column labels
-            if names[i] in data.columns:
-                colname = names[i]
+            if name in data.columns:
+                colname = name
             # 2. if "WIKI/<stock_name> - <col>" in column labels
             elif _get_quandl_data_column_label(reqnames[i], col) in data.columns:
                 colname = _get_quandl_data_column_label(reqnames[i], col)
             # 3. if "<stock_name> - <col>" in column labels
-            elif _get_quandl_data_column_label(names[i], col) in data.columns:
-                colname = _get_quandl_data_column_label(names[i], col)
+            elif _get_quandl_data_column_label(name, col) in data.columns:
+                colname = _get_quandl_data_column_label(name, col)
             # if column labels is of type multiindex, and the "Adj Close" is in
             # first level labels, we assume the dataframe comes from yfinance:
             elif isinstance(data.columns, pd.core.index.MultiIndex):
@@ -861,8 +861,8 @@ def _get_stocks_data_columns(data, names, cols):
                     if not col in firstlevel_colnames:
                         firstlevel_colnames.append(col)
                     if names[i] in data[col].columns:
-                        colname = names[i]
-                    else: # error, it must find names[i] on second level of column header
+                        colname = name
+                    else: # error, it must find name on second level of column header
                         raise ValueError("Could not find column labels in second level of MultiIndex pd.DataFrame")
             # else, error
             else:
@@ -889,9 +889,9 @@ def _get_stocks_data_columns(data, names, cols):
     # to the name of the corresponding stock
     newcolnames = {}
     if len(cols) == 1:
-        for i in range(len(names)):
+        for _, name in enumerate(names):
             newcolnames.update(
-                {_get_quandl_data_column_label(names[i], cols[0]): names[i]}
+                {_get_quandl_data_column_label(name, cols[0]): name}
             )
         data.rename(columns=newcolnames, inplace=True)
     return data
@@ -972,8 +972,7 @@ def _generate_pf_allocation(names=None, data=None):
         # if so, we treat this as a duplication, and ask the user to provide
         # a DataFrame with one data column per stock.
         splitnames = [name.split("-")[0].strip() for name in names]
-        for i in range(len(splitnames)):
-            splitname = splitnames[i]
+        for i, splitname in enumerate(splitnames):
             reducedlist = [elt for num, elt in enumerate(splitnames) if not num == i]
             if splitname in reducedlist:
                 errormsg = (
